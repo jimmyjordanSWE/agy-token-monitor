@@ -75,26 +75,9 @@ func main() {
 	case "help", "--help", "-h":
 		printUsage()
 	default:
-		// Check if user passed flags directly without subcommand
-		if len(cmd) > 0 && cmd[0] == '-' {
-			// Check if export flags were provided directly
-			hasExport := false
-			for _, arg := range os.Args[1:] {
-				if arg == "--export" || arg == "-export" || arg == "--json" || arg == "--csv" {
-					hasExport = true
-					break
-				}
-			}
-			if hasExport {
-				runExport(cfg, os.Args[1:])
-			} else {
-				runStats(cfg, os.Args[1:])
-			}
-		} else {
-			fmt.Fprintf(os.Stderr, "Unknown command: %s\n\n", cmd)
-			printUsage()
-			os.Exit(1)
-		}
+		fmt.Fprintf(os.Stderr, "Unknown command: %s\n\n", cmd)
+		printUsage()
+		os.Exit(1)
 	}
 }
 
@@ -162,7 +145,6 @@ func runExport(cfg *config.Config, args []string) {
 	fs := flag.NewFlagSet("export", flag.ExitOnError)
 	jsonFmt := fs.Bool("json", false, "Export in JSON format")
 	csvFmt := fs.Bool("csv", false, "Export in CSV format")
-	formatLegacy := fs.String("export", "", "Legacy export format flag: json or csv")
 	outPath := fs.String("out", "", "Output file path (default stdout)")
 	convID := fs.String("c", "", "Specific conversation ID to export")
 	fs.StringVar(convID, "conversation", "", "Specific conversation ID to export")
@@ -174,8 +156,6 @@ func runExport(cfg *config.Config, args []string) {
 		fmtChoice = "csv"
 	} else if *jsonFmt {
 		fmtChoice = "json"
-	} else if *formatLegacy != "" {
-		fmtChoice = *formatLegacy
 	}
 
 	database, err := db.OpenDB(cfg.DBPath)
