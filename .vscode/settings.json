@@ -1,0 +1,5 @@
+{
+  "antigravity.autoOpenFiles": false,
+  "workbench.editor.closeOnFileDelete": true,
+  "files.saveConflictResolution": "overwriteFileOnDisk"
+}
