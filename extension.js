@@ -78,66 +78,30 @@ function setHandoffConfig(val) {
     return config.update('handoffTarget', val, vscode.ConfigurationTarget.Global);
 }
 
-function checkAutoHandoffInjection(total) {
-    const agyDir = getAntigravityDir();
-    const rulesDir = path.join(agyDir, 'rules');
-    const ruleFile = path.join(rulesDir, 'context_handoff.md');
 
-    if (cachedHandoffTarget > 0 && total >= cachedHandoffTarget) {
-        if (!fs.existsSync(rulesDir)) fs.mkdirSync(rulesDir, { recursive: true });
-        
-        const nextComp = getNextCompression(total);
-        const fmtTotal = total >= 1000 ? Math.round(total / 1000) + 'k' : total;
-        const fmtTarget = Math.round(cachedHandoffTarget / 1000) + 'k';
-        const fmtNextComp = Math.round(nextComp / 1000) + 'k';
-
-        const content = "---\n" +
-            "description: Critical context compression threshold reached\n" +
-            "---\n\n" +
-            "# ⚠️ CRITICAL CONTEXT LIMIT DIRECTIVE\n" +
-            "Notice: You have consumed ~" + fmtTotal + " tokens, crossing your target threshold (" + fmtTarget + ") and approaching the ~" + fmtNextComp + " context compression boundary.\n\n" +
-            "## REQUIRED ACTION FOR ASSISTANT:\n" +
-            "1. Conclude your immediate sub-task cleanly (do NOT start new large refactors or long investigative tangents).\n" +
-            "2. Ensure working state is verified (files saved, clean git working tree).\n" +
-            "3. Conclude your response with a structured **HANDOFF SUMMARY**:\n" +
-            "   - **Status & Accomplishments**: What was just completed in this session.\n" +
-            "   - **Key Context / Files**: Specific files modified or created.\n" +
-            "   - **Next Action**: The immediate next step to take.\n" +
-            "   - **Continuation Prompt**: A copy-pasteable prompt for the user to provide when opening the new chat.\n";
-
-        if (!fs.existsSync(ruleFile) || fs.readFileSync(ruleFile, 'utf8') !== content) {
-            fs.writeFileSync(ruleFile, content, 'utf8');
-            vscode.window.showWarningMessage('AGY Token Monitor: Context threshold (' + fmtTarget + ') crossed (~' + fmtTotal + ' tokens). Auto-handoff directive injected for the assistant.');
-        }
-    } else {
-        if (fs.existsSync(ruleFile)) {
-            try {
-                fs.unlinkSync(ruleFile);
-            } catch (e) {}
-        }
-    }
-}
 
 function triggerNextTurnHandoff() {
     const agyDir = getAntigravityDir();
-    const rulesDir = path.join(agyDir, 'rules');
-    const ruleFile = path.join(rulesDir, 'context_handoff.md');
-    if (!fs.existsSync(rulesDir)) fs.mkdirSync(rulesDir, { recursive: true });
-    
-    const content = "---\n" +
-        "description: User triggered manual handoff directive\n" +
-        "---\n\n" +
-        "# ⚠️ IMMEDIATE CONTEXT HANDOFF REQUESTED BY USER\n" +
-        "The user has explicitly requested a handoff to start a new clean session.\n\n" +
-        "## INSTRUCTIONS FOR ASSISTANT:\n" +
-        "1. Conclude this turn immediately with a structured **HANDOFF SUMMARY**:\n" +
-        "   - **Status & Accomplishments**: What was just completed in this session.\n" +
-        "   - **Key Context / Files**: Specific files modified or created.\n" +
-        "   - **Next Action**: The immediate next step to take.\n" +
-        "   - **Continuation Prompt**: A copy-pasteable prompt for the user to provide when opening the new chat.\n";
-    
-    fs.writeFileSync(ruleFile, content, 'utf8');
-    vscode.window.showInformationMessage('Hand-off directive injected for next turn. The agent will prepare the handoff summary on its next response.');
+    const stateFile = path.join(agyDir, 'token_hook_state.json');
+    try {
+        let state = {};
+        if (fs.existsSync(stateFile)) {
+            try {
+                state = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+            } catch (e) {}
+        }
+        if (currentConvId) {
+            state[currentConvId] = state[currentConvId] || {};
+            state[currentConvId].forceImmediate = true;
+            state[currentConvId].notified = false;
+            fs.writeFileSync(stateFile, JSON.stringify(state, null, 2), 'utf8');
+            vscode.window.showInformationMessage('Hand-off directive queued for next step via hook. The agent will prepare the handoff summary on its next response.');
+        } else {
+            vscode.window.showWarningMessage('No active conversation detected to queue handoff.');
+        }
+    } catch (e) {
+        vscode.window.showErrorMessage('Failed to queue handoff directive: ' + e.message);
+    }
 }
 
 // In-memory transcript parsing: takes ~1ms, zero subprocesses, zero SQLite locking
@@ -279,9 +243,6 @@ function activate(context) {
                                  '• Next Internal Compression: ' + fmtNextComp + ' (in ~' + fmtTokensLeft + ' | Cycle C' + cycle + ')\n' +
                                  '• User: ' + fmtUser + ' tok | Model: ' + fmtModel + ' tok | Thinking: ' + fmtThinking + ' tok\n\n' +
                                  'Click to configure handoff, inject handoff, or view report';
-
-        // Check if mid-flight threshold crossed and inject directive into rules/
-        checkAutoHandoffInjection(total);
     }
 
     function watchActiveConversation(convId, title) {
