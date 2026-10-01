@@ -44,18 +44,18 @@ Click the status bar widget to open the quick configuration menu:
                   │       transcript_full.jsonl (Raw Logs)       │
                   └───────────────────────┬──────────────────────┘
                                           │
-                            Streaming Tail (1.0s Loop)
+                            fsnotify Event Queue (Zero-CPU idle)
                                           ▼
                   ┌──────────────────────────────────────────────┐
-                  │             Token Daemon                     │
-                  │         agy-token-monitor/daemon.py          │
+                  │             Token Daemon (Go)                │
+                  │        agy-token-monitor daemon              │
                   └───────────────┬──────────────┬───────────────┘
                                   │              │
-                   every turn/step│              │ throttled (10s)
+                   every turn/step│              │ debounced (3s)
                                   ▼              ▼
            ┌────────────────────────────┐  ┌────────────────────────────┐
-           │ SQLite Database            │  │ Annotations Title Tag      │
-           │ ~/.gemini/.../metrics.db   │  │ ~/.gemini/.../<id>.pbtxt   │
+           │ Pure-Go SQLite DB          │  │ Annotations / Summaries    │
+           │ ~/.gemini/.../metrics.db   │  │ conversation_summaries.db  │
            └──────────────┬─────────────┘  └────────────────────────────┘
                           │
             every 1s poll │
@@ -68,32 +68,40 @@ Click the status bar widget to open the quick configuration menu:
 
 ---
 
-## CLI Usage (`agy-tokens`)
+## Unified Go Binary & CLI Usage (`agy-token-monitor` / `agy-tokens`)
 
-Inspect sessions, benchmark prompts, and query token history:
+The unified binary provides subcommands for running the background daemon, inspecting token stats, and exporting data:
 
 ```bash
-# View active conversation summary:
-agy-tokens
+# Build the unified binary:
+go build -o agy-token-monitor .
 
-# Export conversation metrics to JSON or CSV:
-agy-tokens --export json --out tokens.json
-agy-tokens --export csv --out tokens.csv
+# Start the background daemon service:
+agy-token-monitor daemon
+agy-token-monitor daemon --once    # Single-pass reconciliation and sync
 
-# View token metrics grouped by workspace:
-agy-tokens -p
+# View active conversation token summary:
+agy-token-monitor stats
+# (or simply: agy-token-monitor / agy-tokens)
 
-# View top conversations by token consumption:
-agy-tokens -t 10
+# View token metrics grouped by workspace/project:
+agy-token-monitor stats -p
 
-# Filter top conversations by project keyword:
-agy-tokens -t 5 --filter-project my-app
+# View top conversations ranked by token consumption:
+agy-token-monitor stats -t 10
+agy-token-monitor stats -t 5 --filter-project my-app
 
 # Inspect a specific conversation:
-agy-tokens -c <conversation-id>
+agy-token-monitor stats -c <conversation-id>
 
 # Run raw SQL queries:
-agy-tokens -q "SELECT title, est_total_tokens, est_thinking_tokens FROM conversation_summary ORDER BY est_total_tokens DESC LIMIT 5;"
+agy-token-monitor stats -q "SELECT title, est_total_tokens, est_thinking_tokens FROM conversation_summary ORDER BY est_total_tokens DESC LIMIT 5;"
+
+# Export conversation metrics to JSON or CSV:
+agy-token-monitor export --json --out tokens.json
+agy-token-monitor export --csv --out tokens.csv
+agy-token-monitor export --json -c <conversation-id>
+agy-token-monitor export --csv -c <conversation-id>
 ```
 
 ---
