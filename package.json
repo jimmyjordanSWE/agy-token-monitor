@@ -1,0 +1,66 @@
+{
+  "name": "agy-token-monitor",
+  "displayName": "AGY Token Monitor & Handoff",
+  "description": "Live token tracker, compression monitor, and automatic context handoff for Google Antigravity",
+  "version": "1.0.0",
+  "publisher": "nordiska",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other",
+    "Productivity"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "AGY Token Monitor",
+      "properties": {
+        "antigravity.tokenMonitor.handoffTarget": {
+          "type": "integer",
+          "default": 150000,
+          "description": "Token threshold to trigger handoff recommendation (0 to disable)."
+        },
+        "antigravity.tokenMonitor.pollIntervalMs": {
+          "type": "integer",
+          "default": 1000,
+          "minimum": 500,
+          "maximum": 10000,
+          "description": "Status bar refresh interval in milliseconds."
+        },
+        "antigravity.tokenMonitor.enableWarningColors": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show color-coded warnings (yellow/red) when nearing handoff target or internal compression."
+        },
+        "antigravity.tokenMonitor.compressionHeadroomBuffer": {
+          "type": "integer",
+          "default": 25000,
+          "description": "Buffer tokens before compression milestone to trigger early yellow warning."
+        },
+        "antigravity.tokenMonitor.tagSidebarTitles": {
+          "type": "boolean",
+          "default": true,
+          "description": "Prefix conversation titles in sidebar history with estimated token counts (e.g. [150k] Title)."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "antigravity.configureHandoff",
+        "title": "AGY: Configure Handoff & Token Monitor"
+      },
+      {
+        "command": "antigravity.showTokenSummary",
+        "title": "AGY: Show Token Metrics Report"
+      },
+      {
+        "command": "antigravity.injectHandoffNextTurn",
+        "title": "AGY: Inject Handoff Next Turn"
+      }
+    ]
+  }
+}
