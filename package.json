@@ -24,13 +24,6 @@
           "default": 150000,
           "description": "Token threshold to trigger handoff recommendation (0 to disable)."
         },
-        "antigravity.tokenMonitor.pollIntervalMs": {
-          "type": "integer",
-          "default": 1000,
-          "minimum": 500,
-          "maximum": 10000,
-          "description": "Status bar refresh interval in milliseconds."
-        },
         "antigravity.tokenMonitor.enableWarningColors": {
           "type": "boolean",
           "default": true,
@@ -40,11 +33,6 @@
           "type": "integer",
           "default": 25000,
           "description": "Buffer tokens before compression milestone to trigger early yellow warning."
-        },
-        "antigravity.tokenMonitor.tagSidebarTitles": {
-          "type": "boolean",
-          "default": true,
-          "description": "Prefix conversation titles in sidebar history with estimated token counts (e.g. [150k] Title)."
         }
       }
     },
