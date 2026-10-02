@@ -56,6 +56,12 @@ function getAntigravityDir() {
            path.join(process.env.HOME || '', '.gemini', 'antigravity');
 }
 
+function getTranscriptPath(agyDir, convId) {
+    const fullPath = path.join(agyDir, 'brain', convId, '.system_generated', 'logs', 'transcript_full.jsonl');
+    if (fs.existsSync(fullPath)) return fullPath;
+    return path.join(agyDir, 'brain', convId, '.system_generated', 'logs', 'transcript.jsonl');
+}
+
 function getCurrentWorkspaceUri() {
     const folders = vscode.workspace.workspaceFolders;
     if (folders && folders.length > 0) {
@@ -343,7 +349,7 @@ function activate(context) {
         currentConvTitle = title || 'Active Session';
 
         const agyDir = getAntigravityDir();
-        const transcriptPath = path.join(agyDir, 'brain', convId, '.system_generated', 'logs', 'transcript.jsonl');
+        const transcriptPath = getTranscriptPath(agyDir, convId);
 
         // Initial sync on startup
         const metrics = parseTranscriptMetrics(transcriptPath);
@@ -380,7 +386,7 @@ function activate(context) {
                 watchActiveConversation(convId, title);
             } else if (convId) {
                 const agyDir = getAntigravityDir();
-                const transcriptPath = path.join(agyDir, 'brain', convId, '.system_generated', 'logs', 'transcript.jsonl');
+                const transcriptPath = getTranscriptPath(agyDir, convId);
                 const m = parseTranscriptMetrics(transcriptPath);
                 if (m) updateDisplay(m, title || currentConvTitle);
             }
@@ -594,7 +600,7 @@ function activate(context) {
 
             for (let i = 0; i < dirs.length; i++) {
                 const convId = dirs[i].name;
-                const tPath = path.join(brainDir, convId, '.system_generated', 'logs', 'transcript.jsonl');
+                const tPath = getTranscriptPath(agyDir, convId);
                 if (!fs.existsSync(tPath)) continue;
 
                 totalCount++;
