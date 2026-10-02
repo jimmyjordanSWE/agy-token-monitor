@@ -1,6 +1,6 @@
 {
   "name": "agy-token-monitor",
-  "displayName": "AGY Token Monitor & Automatic Handoff",
+  "displayName": "Gemini 3.8 Token Monitor & Automatic Handoff",
   "description": "Real-time token tracker, compression monitor, and automatic context handoff for Google Antigravity",
   "version": "0.9.0-beta.1",
   "publisher": "jimmyjordanswe",

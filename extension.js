@@ -629,9 +629,11 @@ function activate(context) {
 
             sqlStatements.push('COMMIT;');
 
-            if (fs.existsSync(sumDb)) {
+            if (fs.existsSync(sumDb) && sqlStatements.length > 2) {
                 try {
-                    cp.exec('sqlite3 "' + sumDb + '" "' + sqlStatements.join(' ') + '"', () => {});
+                    const proc = cp.spawn('sqlite3', [sumDb]);
+                    proc.stdin.write(sqlStatements.join('\n'));
+                    proc.stdin.end();
                 } catch (e) {}
             }
 
