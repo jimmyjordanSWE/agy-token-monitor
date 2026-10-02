@@ -3,5 +3,6 @@
   "workbench.editor.enablePreview": true,
   "workbench.editor.limit.enabled": true,
   "workbench.editor.limit.value": 8,
-  "workbench.editor.closeOnFileDelete": true
+  "workbench.editor.closeOnFileDelete": true,
+  "antigravity.autoOpenFiles": false
 }
