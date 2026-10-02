@@ -1,7 +1,6 @@
 const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
-const cp = require('child_process');
 
 let currentWatcher = null;
 let currentConvId = null;
@@ -169,72 +168,6 @@ function parseTranscriptMetrics(filePath) {
     }
 }
 
-let lastTaggedTokens = 0;
-let titleUpdateTimer = null;
-
-function formatTokenTag(total) {
-    if (total >= 1000000) return '[' + (total / 1000000).toFixed(1) + 'M]';
-    if (total >= 1000) return '[' + Math.round(total / 1000) + 'k]';
-    return '[' + total + ']';
-}
-
-function updateSidebarTitle(convId, tokens, forceImmediate = false) {
-    if (!convId || !tokens) return;
-    if (!forceImmediate && lastTaggedTokens > 0 && Math.abs(tokens - lastTaggedTokens) < 500) return;
-
-    const doUpdate = () => {
-        lastTaggedTokens = tokens;
-        const agyDir = getAntigravityDir();
-        const tag = formatTokenTag(tokens);
-
-        // 1. Update annotations/<convId>.pbtxt
-        const annotPath = path.join(agyDir, 'annotations', convId + '.pbtxt');
-        try {
-            if (fs.existsSync(annotPath)) {
-                const raw = fs.readFileSync(annotPath, 'utf8');
-                const match = raw.match(/title:\s*"([^"]+)"/);
-                if (match) {
-                    const current = match[1];
-                    const clean = current.replace(/^\[\d+(\.\d+)?[kM]?\]\s*/, '');
-                    const newTitle = tag + ' ' + clean;
-                    if (newTitle !== current) {
-                        const replaced = raw.replace(/title:\s*"([^"]+)"/, 'title:"' + newTitle + '"');
-                        fs.writeFileSync(annotPath, replaced, 'utf8');
-                    }
-                }
-            }
-        } catch (e) {}
-
-        // 2. Update conversation_summaries.db
-        const sumDb = path.join(agyDir, 'conversation_summaries.db');
-        if (fs.existsSync(sumDb)) {
-            try {
-                const safeId = convId.replace(/[^a-zA-Z0-9-]/g, '');
-                const selQuery = "SELECT title FROM conversation_summaries WHERE conversation_id = '" + safeId + "' LIMIT 1;";
-                cp.exec('sqlite3 "' + sumDb + '" "' + selQuery + '"', (err, stdout) => {
-                    if (!err && stdout && stdout.trim()) {
-                        const curTitle = stdout.trim();
-                        const clean = curTitle.replace(/^\[\d+(\.\d+)?[kM]?\]\s*/, '');
-                        const newTitle = tag + ' ' + clean;
-                        if (newTitle !== curTitle) {
-                            const escTitle = newTitle.replace(/'/g, "''");
-                            const updQuery = "UPDATE conversation_summaries SET title = '" + escTitle + "' WHERE conversation_id = '" + safeId + "';";
-                            cp.exec('sqlite3 "' + sumDb + '" "' + updQuery + '"', () => {});
-                        }
-                    }
-                });
-            } catch (e) {}
-        }
-    };
-
-    if (forceImmediate || lastTaggedTokens === 0) {
-        doUpdate();
-    } else {
-        if (titleUpdateTimer) clearTimeout(titleUpdateTimer);
-        titleUpdateTimer = setTimeout(doUpdate, 1500);
-    }
-}
-
 function findActiveConversationFromAnnotations(agyDir) {
     const annotDir = path.join(agyDir, 'annotations');
     if (!fs.existsSync(annotDir)) return null;
@@ -254,7 +187,7 @@ function findActiveConversationFromAnnotations(agyDir) {
                         bestTime = sec;
                         bestId = path.basename(file, '.pbtxt');
                         const titleMatch = raw.match(/title:\s*\"([^\"]+)\"/);
-                        bestTitle = titleMatch ? titleMatch[1].replace(/^\[\d+(\.\d+)?[kM]?\]\s*/, '') : 'Active Session';
+                        bestTitle = titleMatch ? titleMatch[1] : 'Active Session';
                     }
                 }
             } catch (e) {}
@@ -349,10 +282,6 @@ function activate(context) {
                                  '• Next Internal Compression: ' + fmtNextComp + ' (in ~' + fmtTokensLeft + ' | Cycle C' + cycle + ')\n' +
                                  '• User: ' + fmtUser + ' tok | Model: ' + fmtModel + ' tok | Thinking: ' + fmtThinking + ' tok\n\n' +
                                  'Click to configure handoff, inject handoff, or view report';
-
-        if (currentConvId) {
-            updateSidebarTitle(currentConvId, total);
-        }
     }
 
     function watchActiveConversation(convId, title) {
@@ -482,8 +411,6 @@ function activate(context) {
             { label: '$(sign-out) Inject handoff message next turn', description: 'Force agent to summarize and hand off on its next response without altering target threshold', action: 'now' },
             { label: '$(edit) Edit handoff message template...', description: 'Customize the multi-session handoff directive injected to the agent', action: 'editTemplate' },
             { label: '$(output) View detailed token report', description: 'Show breakdown of current conversation', action: 'report' },
-            { label: '$(tag) Tag all past conversations with token counts', description: 'Scan all sessions and prefix [xxk] to titles in history sidebar', action: 'tagAll' },
-            { label: '$(clear-all) Remove token tags from all conversations', description: 'Strip [xxk] prefixes and restore clean original titles in history sidebar', action: 'untagAll' },
             { label: '150k tokens (Pre-Cycle 1)', description: '~20k buffer before 1st compression (~170k)', target: 150000 },
             { label: '320k tokens (Pre-Cycle 2)', description: '~20k buffer before 2nd compression (~340k)', target: 320000 },
             { label: '490k tokens (Pre-Cycle 3)', description: '~20k buffer before 3rd compression (~510k)', target: 490000 },
@@ -522,16 +449,6 @@ function activate(context) {
 
         if (selected.action === 'report') {
             showReportChannel();
-            return;
-        }
-
-        if (selected.action === 'tagAll') {
-            await syncAllConversationsWithProgress();
-            return;
-        }
-
-        if (selected.action === 'untagAll') {
-            await untagAllConversationsWithProgress();
             return;
         }
 
@@ -604,128 +521,6 @@ function activate(context) {
         channel.appendLine('==================================================');
         channel.show(true);
     }
-
-    async function syncAllConversationsWithProgress() {
-        return vscode.window.withProgress({
-            location: vscode.ProgressLocation.Notification,
-            title: 'AGY: Tagging past conversations with token counts...',
-            cancellable: false
-        }, async () => {
-            const agyDir = getAntigravityDir();
-            const brainDir = path.join(agyDir, 'brain');
-            const annotDir = path.join(agyDir, 'annotations');
-            const sumDb = path.join(agyDir, 'conversation_summaries.db');
-
-            if (!fs.existsSync(brainDir)) {
-                vscode.window.showWarningMessage('No Antigravity brain sessions directory found.');
-                return;
-            }
-
-            const dirs = fs.readdirSync(brainDir, { withFileTypes: true }).filter(d => d.isDirectory());
-            let updatedCount = 0;
-            let totalCount = 0;
-            const sqlStatements = ['BEGIN TRANSACTION;'];
-
-            for (let i = 0; i < dirs.length; i++) {
-                const convId = dirs[i].name;
-                const tPath = getTranscriptPath(agyDir, convId);
-                if (!fs.existsSync(tPath)) continue;
-
-                totalCount++;
-                const metrics = parseTranscriptMetrics(tPath);
-                if (!metrics || metrics.total === undefined) continue;
-
-                const tag = formatTokenTag(metrics.total);
-
-                // Update annotation file
-                const annotPath = path.join(annotDir, convId + '.pbtxt');
-                try {
-                    if (fs.existsSync(annotPath)) {
-                        const raw = fs.readFileSync(annotPath, 'utf8');
-                        const match = raw.match(/title:\s*"([^"]+)"/);
-                        if (match) {
-                            const cur = match[1];
-                            const clean = cur.replace(/^\[\d+(\.\d+)?[kM]?\]\s*/, '');
-                            const newTitle = tag + ' ' + clean;
-                            if (newTitle !== cur) {
-                                const replaced = raw.replace(/title:\s*"([^"]+)"/, 'title:"' + newTitle + '"');
-                                fs.writeFileSync(annotPath, replaced, 'utf8');
-                                updatedCount++;
-                            }
-                        }
-                    }
-                } catch (e) {}
-
-                // Queue DB update
-                const safeId = convId.replace(/[^a-zA-Z0-9-]/g, '');
-                sqlStatements.push(`UPDATE conversation_summaries SET title = '${tag} ' || TRIM(CASE WHEN INSTR(title, ']') > 0 THEN SUBSTR(title, INSTR(title, ']') + 1) ELSE title END) WHERE conversation_id = '${safeId}';`);
-            }
-
-            sqlStatements.push('COMMIT;');
-
-            if (fs.existsSync(sumDb) && sqlStatements.length > 2) {
-                try {
-                    const proc = cp.spawn('sqlite3', [sumDb]);
-                    proc.stdin.write(sqlStatements.join('\n'));
-                    proc.stdin.end();
-                } catch (e) {}
-            }
-
-            vscode.window.showInformationMessage('AGY: Successfully scanned ' + totalCount + ' conversations and updated token tags in sidebar history!');
-        });
-    }
-
-    async function untagAllConversationsWithProgress() {
-        return vscode.window.withProgress({
-            location: vscode.ProgressLocation.Notification,
-            title: 'AGY: Removing token tags from conversation titles...',
-            cancellable: false
-        }, async () => {
-            const agyDir = getAntigravityDir();
-            const annotDir = path.join(agyDir, 'annotations');
-            const sumDb = path.join(agyDir, 'conversation_summaries.db');
-
-            let untaggedCount = 0;
-
-            // 1. Clean annotations/*.pbtxt
-            if (fs.existsSync(annotDir)) {
-                try {
-                    const files = fs.readdirSync(annotDir).filter(f => f.endsWith('.pbtxt'));
-                    for (const f of files) {
-                        try {
-                            const p = path.join(annotDir, f);
-                            const raw = fs.readFileSync(p, 'utf8');
-                            const match = raw.match(/title:\s*"([^"]+)"/);
-                            if (match && /^\[\d+(\.\d+)?[kM]?\]\s*/.test(match[1])) {
-                                const clean = match[1].replace(/^\[\d+(\.\d+)?[kM]?\]\s*/, '');
-                                const replaced = raw.replace(/title:\s*"([^"]+)"/, 'title:"' + clean + '"');
-                                fs.writeFileSync(p, replaced, 'utf8');
-                                untaggedCount++;
-                            }
-                        } catch (e) {}
-                    }
-                } catch (e) {}
-            }
-
-            // 2. Clean conversation_summaries.db
-            if (fs.existsSync(sumDb)) {
-                try {
-                    const cleanQuery = "UPDATE conversation_summaries SET title = TRIM(CASE WHEN INSTR(title, ']') > 0 THEN SUBSTR(title, INSTR(title, ']') + 1) ELSE title END) WHERE title LIKE '[%k] %' OR title LIKE '[%M] %' OR title LIKE '[%] %';";
-                    cp.exec('sqlite3 "' + sumDb + '" "' + cleanQuery + '"', () => {});
-                } catch (e) {}
-            }
-
-            vscode.window.showInformationMessage('AGY: Successfully removed token tags from conversation titles in sidebar history!');
-        });
-    }
-
-    context.subscriptions.push(vscode.commands.registerCommand('antigravity.tagAllConversations', () => {
-        return syncAllConversationsWithProgress();
-    }));
-
-    context.subscriptions.push(vscode.commands.registerCommand('antigravity.untagAllConversations', () => {
-        return untagAllConversationsWithProgress();
-    }));
 }
 
 function deactivate() {

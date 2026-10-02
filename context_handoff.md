@@ -27,21 +27,20 @@
 4. **Customizable Macro-Level Handoff Template**:
    * *Decision*: Exposed `antigravity.tokenMonitor.handoffMessage` in `package.json` with a QuickPick editor in `extension.js`, and integrated with the lifecycle hook (`~/.local/bin/agy-token-hook`).
    * *Rationale*: Allows users to tailor the exact handoff prompt to suit multi-session macro objectives rather than single-turn diff summaries.
-5. **Clean Uninstall Lifecycle**:
-   * *Decision*: Contributed `uninstall.js` via the `"vscode:uninstall"` script hook.
-   * *Rationale*: Automatically strips all `[xxk]` prefixes across all sessions in `annotations/` and `conversation_summaries.db` if uninstalled.
+5. **Pure Read-Only State (Zero History Mutation)**:
+   * *Decision*: Removed all history modification / title tampering logic.
+   * *Rationale*: Antigravity conversation history is left 100% untouched; the extension functions purely as a non-intrusive live monitor and hook injector for active/new sessions.
 
 ---
 
 ## 3. Current State & Progress
-* **Codebase & Git**: Clean working tree on `master` branch (ahead of `origin/master` by 5 commits).
-* **Packaged Artifact**: [`agy-token-monitor-0.9.0-beta.1.vsix`](file:///home/jimmy/agy-token-monitor/agy-token-monitor-0.9.0-beta.1.vsix) (~37.2 KB, 8 files, 0 warnings).
+* **Codebase & Git**: Clean working tree on `master` branch.
+* **Packaged Artifact**: [`agy-token-monitor-0.9.0-beta.1.vsix`](file:///home/jimmy/agy-token-monitor/agy-token-monitor-0.9.0-beta.1.vsix).
 * **Installed State**: Installed and running on the active VS Code server (`wsl-dev`).
 * **Verified Features**:
-  * Status bar speedometer with ThemeColor warnings.
+  * Status bar speedometer with ThemeColor warnings (Green -> Yellow -> Red).
   * Next-turn handoff injection via `token_hook_state.json`.
   * Multi-session handoff directive customization via settings and QuickPick.
-  * Fast stdin-streamed SQLite batch tagging / untagging.
 
 ---
 

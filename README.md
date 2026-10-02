@@ -35,8 +35,6 @@ Click the status bar item to open quick actions:
 * **Edit handoff message template**: Customize the macro-level handoff prompt injected to the assistant.
 * **View detailed token report**: Opens an output panel with full session analytics.
 * **Change target threshold**: Select presets (140k, 150k, 160k, 320k) or enter any custom token number.
-* **Tag all past conversations**: Scans all past sessions in ~250ms and prefixes token counts to titles in the history sidebar (e.g. `[89k] Fix Parser Bug`).
-* **Remove token tags**: One-click cleanup to strip `[xxk]` prefixes and restore clean original titles.
 
 ---
 

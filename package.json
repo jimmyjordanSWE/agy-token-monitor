@@ -73,18 +73,7 @@
       {
         "command": "antigravity.injectHandoffNextTurn",
         "title": "AGY: Inject Handoff Next Turn"
-      },
-      {
-        "command": "antigravity.tagAllConversations",
-        "title": "AGY: Tag All Conversation Titles with Token Counts"
-      },
-      {
-        "command": "antigravity.untagAllConversations",
-        "title": "AGY: Remove Token Tags from All Conversation Titles"
       }
     ]
-  },
-  "scripts": {
-    "vscode:uninstall": "node ./uninstall.js"
   }
 }
