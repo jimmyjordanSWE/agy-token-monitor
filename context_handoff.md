@@ -35,7 +35,8 @@
 
 ## 3. Current State & Progress
 * **Codebase & Git**: Clean working tree on `master` branch.
-* **Packaged Artifact**: [`agy-token-monitor-0.9.0-beta.1.vsix`](file:///home/jimmy/agy-token-monitor/agy-token-monitor-0.9.0-beta.1.vsix).
+* **Packaging**: Run `npx @vscode/vsce package --pre-release`. Marketplace requires a numeric `major.minor.patch` version; beta status is stored in VSIX metadata, not a version suffix.
+* **Packaged Artifact**: [`agy-token-monitor-0.9.0.vsix`](file:///home/jimmy/agy-token-monitor/agy-token-monitor-0.9.0.vsix).
 * **Installed State**: Installed and running on the active VS Code server (`wsl-dev`).
 * **Verified Features**:
   * Status bar speedometer with ThemeColor warnings (Green -> Yellow -> Red).
@@ -51,8 +52,8 @@
 ---
 
 ## 5. Immediate Next Action
-1. **Marketplace Upload**: Log into [marketplace.visualstudio.com/manage](https://marketplace.visualstudio.com/manage) under publisher `jimmyjordanswe`, select **New Extension** &rarr; **Visual Studio Code**, and upload [`agy-token-monitor-0.9.0-beta.1.vsix`](file:///home/jimmy/agy-token-monitor/agy-token-monitor-0.9.0-beta.1.vsix).
-2. **Git Push**: Push the 5 local commits (`origin/master`) when ready.
+1. **Marketplace Verification**: Upload of `0.9.0` was accepted; the publisher dashboard shows **Verifying** with **Public** availability. Check the dashboard for the verification result.
+2. **Release Tracking**: The upload fixes are committed on `master` and tagged `v0.9.0` for this pre-release version.
 
 ---
 
@@ -60,5 +61,5 @@
 ```text
 I am continuing development on the Gemini 3.8 Token Monitor extension (agy-token-monitor).
 Please review context_handoff.md and handoff_summary.md for architectural decisions and current state.
-We are ready to publish v0.9.0-beta.1 to the VS Code Marketplace and verify final release readiness.
+Version 0.9.0 has been uploaded to the VS Code Marketplace and is awaiting verification. Git tag v0.9.0 identifies the corresponding source commit.
 ```
