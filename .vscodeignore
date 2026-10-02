@@ -1,0 +1,13 @@
+.vscode/**
+.git/**
+.gitignore
+*.go
+go.mod
+go.sum
+internal/**
+vscode-extension/**
+agy-token-monitor
+ISSUES.md
+context_handoff.md
+*.vsix
+icon.jpg

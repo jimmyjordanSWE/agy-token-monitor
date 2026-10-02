@@ -1,18 +1,37 @@
 {
   "name": "agy-token-monitor",
-  "displayName": "AGY Token Monitor & Handoff",
-  "description": "Live token tracker, compression monitor, and automatic context handoff for Google Antigravity",
-  "version": "1.0.0",
-  "publisher": "nordiska",
+  "displayName": "AGY Token Monitor & Handoff (Beta)",
+  "description": "Real-time token tracker, compression monitor, and automatic context handoff for Google Antigravity",
+  "version": "0.9.0-beta.1",
+  "publisher": "jimmyjordanswe",
+  "author": {
+    "name": "Jimmy Jordan",
+    "url": "https://github.com/jimmyjordanSWE"
+  },
+  "license": "MIT",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jimmyjordanSWE/agy-token-monitor"
+  },
   "engines": {
     "vscode": "^1.80.0"
   },
   "categories": [
-    "Other",
-    "Productivity"
+    "AI",
+    "Productivity",
+    "Other"
+  ],
+  "keywords": [
+    "antigravity",
+    "tokens",
+    "ai-assistant",
+    "context-window",
+    "compression",
+    "handoff"
   ],
   "activationEvents": [
-    "*"
+    "onStartupFinished"
   ],
   "main": "./extension.js",
   "contributes": {
@@ -48,7 +67,16 @@
       {
         "command": "antigravity.injectHandoffNextTurn",
         "title": "AGY: Inject Handoff Next Turn"
+      },
+      {
+        "command": "antigravity.tagAllConversations",
+        "title": "AGY: Tag All Conversation Titles with Token Counts"
+      },
+      {
+        "command": "antigravity.untagAllConversations",
+        "title": "AGY: Remove Token Tags from All Conversation Titles"
       }
     ]
   }
 }
+

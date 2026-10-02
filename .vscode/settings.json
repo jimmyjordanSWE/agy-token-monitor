@@ -1,9 +1,7 @@
 {
-  "files.autoSave": "afterDelay",
-  "files.autoSaveDelay": 1000,
+  "files.autoSave": "onFocusChange",
   "workbench.editor.enablePreview": true,
   "workbench.editor.limit.enabled": true,
   "workbench.editor.limit.value": 8,
-  "workbench.editor.closeOnFileDelete": true,
-  "files.saveConflictResolution": "overwriteFileOnDisk"
+  "workbench.editor.closeOnFileDelete": true
 }
