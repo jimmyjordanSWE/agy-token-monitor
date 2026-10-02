@@ -46,7 +46,7 @@
         "antigravity.tokenMonitor.enableWarningColors": {
           "type": "boolean",
           "default": true,
-          "description": "Show color-coded warnings (yellow/red) when nearing handoff target or internal compression."
+          "description": "Show color-coded status bar (Green safe zone, Yellow after handoff target, Red after compression cliff)."
         },
         "antigravity.tokenMonitor.compressionHeadroomBuffer": {
           "type": "integer",

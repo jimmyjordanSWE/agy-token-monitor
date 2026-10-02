@@ -4,12 +4,9 @@ A lightweight context tracker, compression monitor, and automatic handoff extens
 
 ## Overview
 
-Gemini 3.8 compresses context at roughly **~170,000 tokens** (and subsequent cycles at ~340k, ~510k, ~680k). When internal compression triggers:
-* Past turns are compacted into high-level summaries.
-* Prefix prompt caches are invalidated.
-* Subtleties, constraints, and detailed code context from earlier turns get lost.
+Gemini 3.8 compresses context at roughly **~170,000 tokens** (and subsequent cycles at ~340k, ~510k, ~680k). 
 
-This extension enables you to perform an orderly handoff before compression occurs, letting you transition into a clean context with a complete summary intact.
+This extension enables you to perform an orderly handoff before compression occurs, letting you transition into a clean context with an observable handoff artifact.
 
 *(Note: Future versions will support additional models).*
 
@@ -29,7 +26,7 @@ Tokens are estimated within **~2%** using a calibrated **3.8 characters per toke
 ### 1. Live Status Bar Widget
 Look at the bottom tray in VS Code:
 * Displays active tokens and target: `AGY: 89k handoff 150k`
-* **Color warnings**: Shifts from Normal &rarr; Yellow (within 25k of compression) &rarr; Red (within 10k or past target).
+* **Color coding**: Shifts from Green (safe context under handoff target) &rarr; Yellow (at handoff target e.g. 150k when handoff directive is injected) &rarr; Red (past 170k compression cliff).
 * **Hover tooltip**: Shows breakdowns for User, Model, and Thinking tokens, plus exact headroom remaining.
 
 ### 2. Status Bar Click Menu
@@ -50,7 +47,7 @@ Available under `antigravity.tokenMonitor` in Settings (`Ctrl+,`):
 | Setting | Default | Description |
 |---|---|---|
 | `antigravity.tokenMonitor.handoffTarget` | `150000` | Token threshold to trigger handoff recommendation (`0` to disable). |
-| `antigravity.tokenMonitor.enableWarningColors` | `true` | Show color-coded warnings (Yellow/Red) near limits. |
+| `antigravity.tokenMonitor.enableWarningColors` | `true` | Show color-coded status bar (Green safe zone, Yellow past handoff, Red past compression cliff). |
 | `antigravity.tokenMonitor.compressionHeadroomBuffer` | `25000` | Buffer tokens before compression milestone to trigger early yellow warning. |
 | `antigravity.tokenMonitor.handoffMessage` | *(Macro prompt)* | Custom handoff directive injected to the agent. Supports `{CURRENT_TOKENS}`, `{CLIFF_TOKENS}`, `{BUFFER_LEFT}`. |
 

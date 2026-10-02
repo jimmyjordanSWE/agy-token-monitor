@@ -38,16 +38,27 @@ function getColorForTokens(total, handoffTarget) {
     const enableColors = config.get('enableWarningColors', true);
     if (!enableColors) return undefined;
 
-    const headroom = config.get('compressionHeadroomBuffer', 25000);
-    const nextComp = getNextCompression(total);
-    const distanceToComp = nextComp - total;
-    
-    if ((handoffTarget > 0 && total >= handoffTarget) || distanceToComp <= 10000) {
-        return new vscode.ThemeColor('errorForeground');
-    } else if (distanceToComp <= headroom || (handoffTarget > 0 && (handoffTarget - total) <= 15000)) {
-        return new vscode.ThemeColor('editorWarning.foreground');
+    if (handoffTarget > 0) {
+        const cliff = getNextCompression(handoffTarget > 0 ? handoffTarget - 1 : 0);
+        if (total >= cliff) {
+            return new vscode.ThemeColor('errorForeground');
+        } else if (total >= handoffTarget) {
+            return new vscode.ThemeColor('editorWarning.foreground');
+        } else {
+            return new vscode.ThemeColor('testing.iconPassed');
+        }
+    } else {
+        const headroom = config.get('compressionHeadroomBuffer', 25000);
+        const nextComp = getNextCompression(total);
+        const distanceToComp = nextComp - total;
+        if (distanceToComp <= 0) {
+            return new vscode.ThemeColor('errorForeground');
+        } else if (distanceToComp <= headroom) {
+            return new vscode.ThemeColor('editorWarning.foreground');
+        } else {
+            return new vscode.ThemeColor('testing.iconPassed');
+        }
     }
-    return undefined;
 }
 
 function getAntigravityDir() {
@@ -298,6 +309,7 @@ function activate(context) {
     const tokenStatusBar = vscode.window.createStatusBarItem('agy-tokens', vscode.StatusBarAlignment.Right, 101);
     tokenStatusBar.name = 'AGY Tokens & Handoff';
     tokenStatusBar.text = 'AGY: 0k handoff ' + initialHandoffLabel;
+    tokenStatusBar.color = getColorForTokens(0, cachedHandoffTarget);
     tokenStatusBar.tooltip = 'Click to configure handoff or view token report';
     tokenStatusBar.command = 'antigravity.configureHandoff';
     tokenStatusBar.show();
