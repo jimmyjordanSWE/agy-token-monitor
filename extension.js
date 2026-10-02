@@ -468,6 +468,7 @@ function activate(context) {
 
         options.push(
             { label: '$(sign-out) Inject handoff message next turn', description: 'Force agent to summarize and hand off on its next response without altering target threshold', action: 'now' },
+            { label: '$(edit) Edit handoff message template...', description: 'Customize the multi-session handoff directive injected to the agent', action: 'editTemplate' },
             { label: '$(output) View detailed token report', description: 'Show breakdown of current conversation', action: 'report' },
             { label: '$(tag) Tag all past conversations with token counts', description: 'Scan all sessions and prefix [xxk] to titles in history sidebar', action: 'tagAll' },
             { label: '$(clear-all) Remove token tags from all conversations', description: 'Strip [xxk] prefixes and restore clean original titles in history sidebar', action: 'untagAll' },
@@ -489,6 +490,21 @@ function activate(context) {
 
         if (selected.action === 'now') {
             triggerNextTurnHandoff();
+            return;
+        }
+
+        if (selected.action === 'editTemplate') {
+            const config = vscode.workspace.getConfiguration('antigravity.tokenMonitor');
+            const currentMsg = config.get('handoffMessage', '');
+            const input = await vscode.window.showInputBox({
+                prompt: 'Edit custom handoff message (supports {CURRENT_TOKENS}, {CLIFF_TOKENS}, {BUFFER_LEFT})',
+                value: currentMsg,
+                placeHolder: 'Enter handoff prompt template...'
+            });
+            if (input !== undefined) {
+                await config.update('handoffMessage', input, vscode.ConfigurationTarget.Global);
+                vscode.window.showInformationMessage('AGY Token Monitor: Handoff message template updated.');
+            }
             return;
         }
 

@@ -35,6 +35,7 @@ Look at the bottom tray in VS Code:
 ### 2. Status Bar Click Menu
 Click the status bar item to open quick actions:
 * **Inject handoff message next turn**: Commands the agent to summarize and hand off on its immediate next response.
+* **Edit handoff message template**: Customize the macro-level handoff prompt injected to the assistant.
 * **View detailed token report**: Opens an output panel with full session analytics.
 * **Change target threshold**: Select presets (140k, 150k, 160k, 320k) or enter any custom token number.
 * **Tag all past conversations**: Scans all past sessions in ~250ms and prefixes token counts to titles in the history sidebar (e.g. `[89k] Fix Parser Bug`).
@@ -51,6 +52,7 @@ Available under `antigravity.tokenMonitor` in Settings (`Ctrl+,`):
 | `antigravity.tokenMonitor.handoffTarget` | `150000` | Token threshold to trigger handoff recommendation (`0` to disable). |
 | `antigravity.tokenMonitor.enableWarningColors` | `true` | Show color-coded warnings (Yellow/Red) near limits. |
 | `antigravity.tokenMonitor.compressionHeadroomBuffer` | `25000` | Buffer tokens before compression milestone to trigger early yellow warning. |
+| `antigravity.tokenMonitor.handoffMessage` | *(Macro prompt)* | Custom handoff directive injected to the agent. Supports `{CURRENT_TOKENS}`, `{CLIFF_TOKENS}`, `{BUFFER_LEFT}`. |
 
 ---
 

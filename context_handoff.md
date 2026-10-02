@@ -1,6 +1,6 @@
 # Long-Term Mission & Architecture Handoff
 
-> **Purpose**: This document bridges context across multiple conversation sessions. It explains the overarching problem we are solving, the architectural decisions and trade-offs made, the current state of the product, and how future agents should continue development without regressing design choices.
+> **Purpose**: This document bridges context across multiple conversation sessions. It explains the overarching problem we are solving, the architectural decisions and trade-offs made, the current state, and how future agents should continue work without regressing design choices.
 
 ---
 

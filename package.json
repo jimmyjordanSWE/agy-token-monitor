@@ -52,6 +52,12 @@
           "type": "integer",
           "default": 25000,
           "description": "Buffer tokens before compression milestone to trigger early yellow warning."
+        },
+        "antigravity.tokenMonitor.handoffMessage": {
+          "type": "string",
+          "editPresentation": "multilineText",
+          "default": "⚠️ [Context Boundary Notice]: You have consumed ~{CURRENT_TOKENS} tokens and are approaching the ~{CLIFF_TOKENS} token compression cliff (~{BUFFER_LEFT} tokens remaining in this buffer).\n\nDo NOT simply provide a commit log or recite recently changed files. Prepare a comprehensive macro-level HANDOFF DOCUMENT that bridges work across multiple conversation sessions:\n1. **Core Problem & Goal**: What specific problem are we trying to solve across sessions? What are the key requirements?\n2. **Architectural Decisions & Rationale**: What technical decisions were made, why were they chosen, and what alternative approaches were considered or rejected?\n3. **Current State & Progress**: What is working, what is broken, and what is currently in flight?\n4. **Known Pitfalls & Constraints**: What gotchas, failure modes, or environment constraints must subsequent agents avoid?\n5. **Immediate Next Action**: Exactly where should the next session pick up?\n6. **Continuation Prompt**: A copy-pasteable prompt for the user to start the new session.",
+          "description": "Custom handoff message template injected when nearing compression or when manually triggered. Supports variables: {CURRENT_TOKENS}, {CLIFF_TOKENS}, {BUFFER_LEFT}, {WORKSPACE_NAME}, {CONVERSATION_ID}."
         }
       }
     },
